@@ -86,8 +86,42 @@ function Main() {
       if (isInside) {
         AddFruit(world, position, currentFruit, SCALE[currentFruit - 1]);
         currentFruit = Math.floor(Math.random() * 4) + 1;
-        nextFruitRef.current = ChangeRadius(world, nextFruitRef.current, currentFruit);
+        nextFruitRef.current = ChangeRadius(
+          world,
+          nextFruitRef.current,
+          currentFruit
+        );
       }
+    });
+
+    Events.on(engine, "collisionStart", (e) => {
+      e.pairs.forEach(({ bodyA, bodyB }) => {
+        if (
+          bodyA.label === "fruit" &&
+          bodyB.label === "fruit" &&
+          bodyA.circleRadius === bodyB.circleRadius
+        ) {
+          World.remove(world, bodyA);
+          const newRadius = bodyB.circleRadius + 10;
+          const sacleInd = Math.floor(newRadius / 10) - 1;
+          const { position } = bodyB;
+          World.remove(world, bodyB);
+          const newFruit = Bodies.circle(position.x, position.y, newRadius, {
+            restitution: 0.5,
+            friction: 1,
+            density: 0.5,
+            label: "fruit",
+            render: {
+              sprite: {
+                texture: `./fruits/${parseInt(newRadius / 10)}.png`,
+                xScale: SCALE[sacleInd],
+                yScale: SCALE[sacleInd],
+              },
+            },
+          });
+          World.add(world, newFruit);
+        }
+      });
     });
     return () => {
       Render.stop(render);
